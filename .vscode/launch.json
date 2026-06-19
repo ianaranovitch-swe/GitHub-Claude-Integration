@@ -20,6 +20,15 @@
       "args": ["--all"],
       "envFile": "${workspaceFolder}/.env",
       "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Telegram Bot",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/telegram_bot.py",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceFolder}"
     }
   ]
 }

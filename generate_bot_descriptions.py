@@ -12,7 +12,10 @@ import json
 import os
 import sys
 import time
+from contextvars import ContextVar
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Callable, Optional
 
 import requests
 from dotenv import load_dotenv
@@ -42,6 +45,72 @@ PLACEHOLDER_CONTACT_EMAILS = frozenset({
     "example@example.com",
 })
 # ──────────────────────────────────────────────────────────────────────────────
+
+# Контекст текущей задачи (безопасно для нескольких пользователей Telegram)
+_job_ctx: ContextVar[Optional["JobConfig"]] = ContextVar("job", default=None)
+
+
+@dataclass
+class JobConfig:
+    """Параметры одного запуска генерации (CLI или Telegram-пользователь)."""
+    github_username: str
+    github_token: str = ""
+    repo_filter: str = "all"
+    output_dir: Path = field(default_factory=Path.cwd)
+    site_title: str = ""
+    use_claude_html: bool = True
+    use_template_html: bool = False
+    fresh_pricing: bool = False
+
+    @property
+    def output_json_path(self) -> Path:
+        return self.output_dir / "bot_descriptions.json"
+
+    @property
+    def output_html_path(self) -> Path:
+        return self.output_dir / "index.html"
+
+    def resolved_site_title(self) -> str:
+        if self.site_title:
+            return self.site_title
+        return f"Telegram-tjänster — @{self.github_username}"
+
+
+def _active_job() -> Optional[JobConfig]:
+    return _job_ctx.get()
+
+
+def _github_username() -> str:
+    job = _active_job()
+    return job.github_username if job else GITHUB_USERNAME
+
+
+def _github_token() -> str:
+    job = _active_job()
+    return job.github_token if job else GITHUB_TOKEN
+
+
+def _output_json_path() -> Path:
+    job = _active_job()
+    return job.output_json_path if job else Path(OUTPUT_FILE)
+
+
+def _output_html_path() -> Path:
+    job = _active_job()
+    return job.output_html_path if job else Path(OUTPUT_HTML)
+
+
+def _site_title() -> str:
+    job = _active_job()
+    return job.resolved_site_title() if job else SITE_TITLE
+
+
+def _repo_filter() -> str:
+    job = _active_job()
+    return job.repo_filter if job else REPO_FILTER
+
+
+ProgressCallback = Callable[[str], None]
 
 
 def is_placeholder_contact_email(email):
@@ -153,29 +222,83 @@ def clean_html_response(raw):
 
 def get_github_headers():
     headers = {"Accept": "application/vnd.github+json"}
-    if GITHUB_TOKEN:
-        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    token = _github_token()
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
     return headers
 
 
-def fetch_all_repos():
-    """Забирает все репозитории (публичные + приватные, если есть токен)."""
-    url = "https://api.github.com/user/repos"
-    params = {"per_page": 100, "sort": "updated", "type": "all"}
+def validate_github_username(username: str) -> bool:
+    """Проверяет, что GitHub-пользователь существует."""
+    clean = username.strip().lstrip("@")
+    if not clean:
+        return False
+    resp = requests.get(
+        f"https://api.github.com/users/{clean}",
+        headers={"Accept": "application/vnd.github+json"},
+        timeout=20,
+    )
+    return resp.status_code == 200
 
-    if not GITHUB_TOKEN:
-        url = f"https://api.github.com/users/{GITHUB_USERNAME}/repos"
-        print("⚠️  GITHUB_TOKEN не задан — берём только публичные repos.")
+
+def validate_github_token(username: str, token: str) -> tuple[bool, str]:
+    """Проверяет токен и что он принадлежит указанному пользователю."""
+    clean_user = username.strip().lstrip("@")
+    resp = requests.get(
+        "https://api.github.com/user",
+        headers={
+            "Accept": "application/vnd.github+json",
+            "Authorization": f"Bearer {token.strip()}",
+        },
+        timeout=20,
+    )
+    if resp.status_code != 200:
+        return False, "Ogiltig GitHub-token. Kontrollera att token har rättigheten «repo»."
+    login = (resp.json().get("login") or "").lower()
+    if login != clean_user.lower():
+        return False, f"Token tillhör @{login}, inte @{clean_user}. Använd token för rätt konto."
+    return True, ""
+
+
+def count_public_repos(username: str) -> int:
+    """Считает публичные репозитории пользователя."""
+    clean = username.strip().lstrip("@")
+    resp = requests.get(
+        f"https://api.github.com/users/{clean}",
+        headers={"Accept": "application/vnd.github+json"},
+        timeout=20,
+    )
+    if resp.status_code != 200:
+        return 0
+    return int(resp.json().get("public_repos", 0))
+
+
+def fetch_all_repos():
+    """Забирает репозитории (публичные или все, если есть токен)."""
+    username = _github_username()
+    token = _github_token()
+
+    if token:
+        url = "https://api.github.com/user/repos"
+        params = {"per_page": 100, "sort": "updated", "type": "all"}
+    else:
+        url = f"https://api.github.com/users/{username}/repos"
+        params = {"per_page": 100, "sort": "updated", "type": "public"}
+        print("⚠️  Ingen GitHub-token — hämtar bara publika repos.")
 
     resp = requests.get(url, headers=get_github_headers(), params=params, timeout=30)
     resp.raise_for_status()
-    return resp.json()
+    repos = resp.json()
+
+    if token:
+        return repos
+    return [repo for repo in repos if not repo.get("private", False)]
 
 
 def fetch_file_content(repo_name, filepath):
     """Читает содержимое одного файла из репозитория."""
     url = (
-        f"https://api.github.com/repos/{GITHUB_USERNAME}/{repo_name}"
+        f"https://api.github.com/repos/{_github_username()}/{repo_name}"
         f"/contents/{filepath}"
     )
     resp = requests.get(url, headers=get_github_headers(), timeout=30)
@@ -188,7 +311,7 @@ def fetch_file_content(repo_name, filepath):
 
 def fetch_repo_tree(repo_name):
     """Возвращает список всех файлов в репозитории."""
-    url = f"https://api.github.com/repos/{GITHUB_USERNAME}/{repo_name}/git/trees/HEAD"
+    url = f"https://api.github.com/repos/{_github_username()}/{repo_name}/git/trees/HEAD"
     resp = requests.get(
         url, headers=get_github_headers(), params={"recursive": "1"}, timeout=30
     )
@@ -384,8 +507,8 @@ def generate_landing_html_with_claude(output_data, pricing_data):
     """Claude создаёт продающую HTML-страницу для доступа к сервисам."""
     bots_json = json.dumps(output_data.get("bots", []), ensure_ascii=False, indent=2)
     pricing_json = json.dumps(pricing_data, ensure_ascii=False, indent=2)
-    site_title = SITE_TITLE
-    username = output_data.get("username", GITHUB_USERNAME)
+    site_title = _site_title()
+    username = output_data.get("username", _github_username())
     generated_at = output_data.get("generated_at", "")
 
     prompt = f"""Du är en senior webbdesigner och copywriter som bygger SaaS-landningssidor.
@@ -621,10 +744,10 @@ def build_fallback_landing_html(output_data):
     """Простая резервная страница, если Claude не смог создать HTML."""
     bots = output_data.get("bots", [])
     pricing_data = output_data.get("pricing")
-    username = escape_text(output_data.get("username", GITHUB_USERNAME))
+    username = escape_text(output_data.get("username", _github_username()))
     generated_at = escape_text(output_data.get("generated_at", ""))
     total = output_data.get("total_bots", len(bots))
-    site_title = escape_text(SITE_TITLE)
+    site_title = escape_text(_site_title())
     contact_block = build_contact_block(pricing_data)
     has_pricing = is_current_pricing_format(pricing_data)
     contact_cta = (
@@ -933,7 +1056,7 @@ def update_pricing_if_needed(output_data, fresh_pricing=False, require_for_claud
     pricing_data = generate_pricing_with_claude(output_data.get("bots", []))
     if pricing_data:
         output_data["pricing"] = pricing_data
-        with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
+        with open(_output_json_path(), "w", encoding="utf-8") as file:
             json.dump(output_data, file, ensure_ascii=False, indent=2)
     return pricing_data
 
@@ -957,15 +1080,15 @@ def save_landing_page(output_data, use_claude=True, use_template=False, fresh_pr
         print("  ⚠️  Använder enkel reservmall för HTML.")
         html_content = build_fallback_landing_html(output_data)
 
-    with open(OUTPUT_HTML, "w", encoding="utf-8") as file:
+    with open(_output_html_path(), "w", encoding="utf-8") as file:
         file.write(html_content)
 
 
 def load_json_output():
     """Читает ранее сохранённый JSON."""
-    json_path = Path(OUTPUT_FILE)
+    json_path = _output_json_path()
     if not json_path.exists():
-        print(f"❌ Filen {OUTPUT_FILE} hittades inte. Kör skriptet utan --html-only först.")
+        print(f"❌ Filen {json_path} hittades inte. Kör skriptet utan --html-only först.")
         return None
     with open(json_path, encoding="utf-8") as file:
         return json.load(file)
@@ -1010,10 +1133,23 @@ def parse_args():
     return parser.parse_args()
 
 
+def filter_target_repos(repos, repo_filter=None, bots_only=False, all_repos=False):
+    """Фильтрует список репозиториев по типу."""
+    repo_filter = repo_filter or _repo_filter()
+    bot_repos = [repo for repo in repos if is_telegram_bot(repo)]
+    other_repos = [repo for repo in repos if not is_telegram_bot(repo)]
+
+    if all_repos or repo_filter == "all":
+        return repos
+    if bots_only or repo_filter == "bots":
+        return bot_repos
+    return repos
+
+
 def choose_target_repos(repos, args):
-    """Выбирает, какие репозитории обрабатывать."""
-    bot_repos = [r for r in repos if is_telegram_bot(r)]
-    other_repos = [r for r in repos if not is_telegram_bot(r)]
+    """Выбирает, какие репозитории обрабатывать (CLI)."""
+    bot_repos = [repo for repo in repos if is_telegram_bot(repo)]
+    other_repos = [repo for repo in repos if not is_telegram_bot(repo)]
 
     print(f"   → {len(bot_repos)} Telegram-botar identifierade")
     print(f"   → {len(other_repos)} övriga repos")
@@ -1023,7 +1159,6 @@ def choose_target_repos(repos, args):
     if args.bots_only:
         return bot_repos
 
-    # Из .env или интерактивный выбор в терминале
     if REPO_FILTER == "all":
         return repos
     if REPO_FILTER == "bots":
@@ -1034,6 +1169,72 @@ def choose_target_repos(repos, args):
     print("  2 = Alla repos")
     choice = input("Välj (1/2): ").strip()
     return repos if choice == "2" else bot_repos
+
+
+def run_generation_job(job: JobConfig, on_progress: Optional[ProgressCallback] = None):
+    """Полный цикл генерации JSON + HTML для одного пользователя."""
+    if not ANTHROPIC_API_KEY:
+        raise RuntimeError("ANTHROPIC_API_KEY saknas i serverns .env")
+
+    def progress(message: str):
+        if on_progress:
+            on_progress(message)
+        else:
+            print(message)
+
+    job.output_dir.mkdir(parents=True, exist_ok=True)
+    token = _job_ctx.set(job)
+    try:
+        progress(f"📦 Hämtar repos för @{job.github_username}...")
+        repos = fetch_all_repos()
+        progress(f"   Hittade {len(repos)} repos")
+
+        target_repos = filter_target_repos(
+            repos,
+            repo_filter=job.repo_filter,
+            all_repos=job.repo_filter == "all",
+        )
+        if not target_repos:
+            raise RuntimeError("Inga repos hittades att analysera.")
+
+        progress(f"✍️ Genererar beskrivningar för {len(target_repos)} repos...")
+
+        results = []
+        for index, repo in enumerate(target_repos, 1):
+            name = repo["name"]
+            progress(f"[{index}/{len(target_repos)}] {name}")
+            context = collect_repo_context(repo)
+            description = generate_description_with_claude(context, name)
+            if description:
+                description["repo_name"] = name
+                description["repo_url"] = repo["html_url"]
+                description["language"] = repo.get("language")
+                description["updated_at"] = repo.get("updated_at")
+                results.append(description)
+            if index < len(target_repos):
+                time.sleep(1)
+
+        output = {
+            "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+            "username": job.github_username,
+            "total_bots": len(results),
+            "bots": results,
+        }
+
+        with open(job.output_json_path, "w", encoding="utf-8") as file:
+            json.dump(output, file, ensure_ascii=False, indent=2)
+
+        progress("🎨 Skapar HTML-landningssida...")
+        save_landing_page(
+            output,
+            use_claude=job.use_claude_html,
+            use_template=job.use_template_html,
+            fresh_pricing=job.fresh_pricing,
+        )
+        progress("✅ Klart!")
+        return output, job.output_json_path, job.output_html_path
+    finally:
+        _job_ctx.reset(token)
 
 
 def check_prerequisites():

@@ -4,6 +4,8 @@ GitHub-TOKEN.txt
 
 # Результат работы скрипта
 bot_descriptions.json
+index.html
+output/
 
 # Python
 __pycache__/

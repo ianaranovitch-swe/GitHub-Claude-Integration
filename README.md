@@ -13,6 +13,38 @@ Claude сам решает цены и пакеты кредитов на шве
 
 ---
 
+## Telegram-бот (новое)
+
+Проект можно запускать как **Telegram-бот**. Пользователь проходит диалог:
+
+1. `/start` — бот приветствует
+2. Вводит **GitHub username**
+3. Бот показывает количество **публичных repos**
+4. Спрашивает: включить **приватные repos**?
+   - **Нет** → генерирует HTML только по публичным
+   - **Да** → пользователь отправляет **GitHub token** (сообщение удаляется)
+5. Бот отправляет `index.html` + `bot_descriptions.json` в чат
+
+### Запуск Telegram-бота
+
+1. Создай бота у [@BotFather](https://t.me/BotFather) и получи `TELEGRAM_BOT_TOKEN`
+2. Добавь в `.env`:
+```env
+TELEGRAM_BOT_TOKEN=твой_токен_от_BotFather
+ANTHROPIC_API_KEY=твой_claude_ключ
+```
+3. Установи зависимости и запусти:
+```powershell
+python -m pip install -r requirements.txt
+python telegram_bot.py
+```
+
+Или в Cursor: **Run and Debug** → **Telegram Bot** → F5
+
+> **Безопасность:** GitHub-token от пользователя **не сохраняется** — только для одной генерации. Claude API-ключ хранится на сервере в `.env`.
+
+---
+
 ## Быстрый старт (один раз)
 
 ### Шаг 1. Установите Python
