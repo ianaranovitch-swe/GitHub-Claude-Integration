@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Telegram-botar till salu</title>
-  <meta name="description" content="Färdiga Telegram-botar byggda av test. Köp, anpassa och deploya direkt.">
+  <title>Telegram-tjänster — använd mina botar</title>
+  <meta name="description" content="Använd Telegram-tjänster — betala per förfrågan eller generation. Mat, landningssidor, produktbilder och mer.">
   <style>
     :root {
       --bg: #0f1419;
@@ -154,12 +154,12 @@
 <body>
   <header>
     <div class="container">
-      <h1>Telegram-botar till salu</h1>
-      <p>Färdiga Telegram-botar från GitHub — analyserade, beskrivna och redo att köpas eller anpassas efter dina behov.</p>
+      <h1>Telegram-tjänster — använd mina botar</h1>
+      <p>Använd mina Telegram-tjänster — betala bara för det du behöver. Matuppslag, landningssidor, produktbilder och mer.</p>
       <div class="stats">
-        <span class="stat"><strong>1</strong> produkter</span>
-        <span class="stat">av <strong>@test</strong></span>
-        <span class="stat">Uppdaterad <strong>2026-06-19</strong></span>
+        <span class="stat"><strong>14</strong> tjänster</span>
+        <span class="stat">av <strong>@ianaranovitch-swe</strong></span>
+        <span class="stat">Uppdaterad <strong>2026-06-19 09:43:23</strong></span>
       </div>
     </div>
   </header>
@@ -169,19 +169,240 @@
       
     <article class="bot-card">
       <div class="bot-card-header">
-        <span class="category">AI</span>
-        <h2>Test Bot</h2>
-        <p class="tagline">En smart bot</p>
+        <span class="category">Mat &amp; hälsa</span>
+        <h2>Mat &amp; Näring-boten</h2>
+        <p class="tagline">Slå upp näringsvärden för vilken matvara som helst – direkt i Telegram</p>
       </div>
-      <p class="description">Gör coola saker.</p>
-      <ul class="features"><li>A</li><li>B</li></ul>
-      <p class="ideal-for"><strong>Passar för:</strong> Företag</p>
-      <div class="tech-stack"><span class="tag">Python</span></div>
+      <p class="description">Med Mat &amp; Näring-boten får du omedelbar tillgång till kalorier och nyckelnutrienter för hundratals livsmedel, hämtade direkt från USDA:s officiella databas. Skriv in ett livsmedel, välj portion och få tydlig näringsinformation på sekunder. Perfekt för dig som vill hålla koll på vad du äter utan att behöva leta runt på olika webbplatser.</p>
+      <ul class="features"><li>Sök på valfritt livsmedel och få kalorier samt makronutrienter per 100 g</li><li>Välj mellan olika portionsstorlekar för exakt näringsinformation</li><li>Stöd för svenska produktnamn – boten översätter automatiskt din sökning</li><li>Snabba svar direkt i Telegram-chatten utan inloggning eller appar</li><li>Data hämtas från USDA FoodData Central – en av världens mest pålitliga livsmedelsdatabaser</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Hälsomedvetna personer, fitnessentusiaster, kostrådgivare, föräldrar som vill hålla koll på familjens matvanor samt alla som räknar kalorier eller följer en specifik diet.</p>
+      <p class="meta">Enhet: förfrågningar</p>
+      <p class="meta">Exempel: Användaren skriver &#x27;havregryn&#x27; i chatten → boten returnerar kalorier, protein, kolhydrater, fett och fiber per 100 g samt alternativa portionsstorlekar.</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">USDA FoodData Central API</span><span class="tag">Telegram Bot API</span><span class="tag">httpx</span></div>
       <div class="bot-card-actions">
-        <a class="btn btn-secondary" href="https://github.com" target="_blank" rel="noopener">Visa på GitHub</a>
-        <a class="btn btn-primary" href="#kontakt">Köp / fråga</a>
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
       </div>
-      
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">Sport &amp; AI-analys</span>
+        <h2>Fotbollsprognos-boten</h2>
+        <p class="tagline">Få AI-drivna fotbollsprognoser direkt i Telegram – inför varje match</p>
+      </div>
+      <p class="description">Med Fotbollsprognos-boten kan du hämta detaljerade AI-analyser och matchprognoser för kommande fotbollsmatcher, inklusive VM 2026. Boten analyserar statistik via Claude och ger dig sannolikheter, tippade slutresultat och matchutfall – allt utan att du behöver lämna Telegram. Perfekt för dig som vill ha ett datadrivet underlag inför ditt spel eller bara vill hänga med i fotbollsvärlden.</p>
+      <ul class="features"><li>AI-genererade matchprognoser med sannolikheter och tippade slutresultat</li><li>Översikt över kommande matcher från populära ligor och VM 2026</li><li>Statistik över botens tidigare träffsäkra prognoser – se hur ofta AI:n haft rätt</li><li>Snabbprognoser för VM 2026 med korta procentsatser för upp till 15 matcher</li><li>Stöd för både svenska och ryska gränssnittsspråk</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Fotbollsintresserade som vill ha AI-baserade tips och analyser inför matcher, samt spelare som vill komplettera sin analys med datadriven statistik.</p>
+      <p class="meta">Enhet: prognoser</p>
+      <p class="meta">Exempel: Användaren väljer en kommande match, t.ex. Sverige vs Spanien, och får direkt en AI-analys med tippat resultat (2-1), sannolikheter per utfall och en kort motivering baserad på aktuell statistik.</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">Claude (Anthropic)</span><span class="tag">python-telegram-bot</span><span class="tag">football-data.org API</span><span class="tag">SQLite</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">Webb &amp; domän</span>
+        <h2>Landningssid-generatorn</h2>
+        <p class="tagline">Generera en professionell landningssida direkt i Telegram – på sekunder</p>
+      </div>
+      <p class="description">Med Landningssid-generatorn beskriver du enkelt ditt företag eller erbjudande i chatten, väljer stil och färgpalett, och får en komplett HTML-landningssida levererad direkt till dig. AI:n skapar både sidans innehåll och professionella bilder anpassade efter din verksamhet. Perfekt för dig som snabbt vill lansera en snygg webbsida utan att anlita en byrå.</p>
+      <ul class="features"><li>AI-genererad HTML-landningssida baserad på din företagsbeskrivning</li><li>Välj designstil: modern, klassisk, futuristisk, naturlig eller lyxig</li><li>Välj färgpalett: ljus, mörk eller färgstark</li><li>AI-genererade bilder anpassade till din verksamhet (via Gemini)</li><li>Möjlighet att ladda upp egna produktbilder som integreras i sidan</li><li>Förhandsgranskning som skärmbild direkt i Telegram</li><li>Ladda ner färdig HTML-fil eller ZIP-paket med alla bilder inkluderade</li><li>Beställ domännamn och publicering av din sida via boten</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Småföretagare, frilansare, e-handlare och startups som snabbt vill ha en professionell landningssida utan teknisk kunskap eller stor budget</p>
+      <p class="meta">Enhet: genereringar</p>
+      <p class="meta">Exempel: Användaren skriver &#x27;Jag säljer handgjorda smycken i silver och guld&#x27; → väljer stil &#x27;lyxig&#x27; och färgpalett &#x27;mörk&#x27; → väljer AI-bilder → får en komplett landningssida som HTML-fil med skärmbild och nedladdningsbar ZIP</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">Claude (Anthropic)</span><span class="tag">Gemini (Google AI)</span><span class="tag">Playwright</span><span class="tag">Telegram Bot API</span><span class="tag">PostgreSQL</span><span class="tag">FastAPI</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">Finans &amp; Trading</span>
+        <h2>SoundMaster Trading Bot</h2>
+        <p class="tagline">Få AI-drivna köp- och säljsignaler för amerikanska aktier direkt i Telegram</p>
+      </div>
+      <p class="description">SoundMaster Trading Bot analyserar amerikanska aktier och ETF:er i realtid genom att kombinera sju tekniska strategier med AI-nyhetssentiment från Claude. Du får tydliga köp-, sälj- eller avvakta-signaler baserade på RSI, MACD, glidande medelvärden och aktuella nyheter – allt styrt direkt via Telegram. Perfekt för den som vill fatta datadrivna handelsbeslut utan att själv behöva sitta och tolka diagram.</p>
+      <ul class="features"><li>Analysera valfri amerikansk aktie eller ETF och få en tydlig signal: KÖP, SÄLJ eller AVVAKTA</li><li>AI-sentiment via Claude som väger in aktuella nyhetsrubriker i analysen</li><li>Tekniska indikatorer: RSI, MACD, MA20/MA50 och fler – sammanvägda till ett poängbaserat beslutsstöd</li><li>Styrning helt via Telegram med knappar och kommandon – inget extra verktyg behövs</li><li>Stöd för både simulerad (paper) och riktig handel via Alpaca</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Privatinvesterare och traders som vill ha snabba, AI-stödda aktieanalyser utan att behöva tolka tekniska indikatorer manuellt</p>
+      <p class="meta">Enhet: analyser</p>
+      <p class="meta">Exempel: Användaren skriver &#x27;/analyze AAPL&#x27; i Telegram och får direkt en sammanvägd signal med RSI, MACD, nyhetssentiment och en slutrekommendation: KÖP, SÄLJ eller AVVAKTA</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">Claude (Anthropic)</span><span class="tag">Alpaca API</span><span class="tag">NewsAPI</span><span class="tag">Telegram Bot API</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">Sport &amp; Analys</span>
+        <h2>Fotbollsprognos-tjänsten</h2>
+        <p class="tagline">Få AI-drivna matchprognoser för fotboll direkt i Telegram – innan du lägger ditt tips</p>
+      </div>
+      <p class="description">Med Fotbollsprognos-tjänsten skickar du in en matchfråga och får omedelbart en statistiskt beräknad prognos för utgången (1X2) baserad på avancerad sannolikhetsmodellering. Tjänsten analyserar matchdata och räknar ut sannolikheter för hemmaseger, oavgjort eller bortaseger – allt direkt i din Telegram-chatt. Perfekt för dig som vill ha ett datadrivet underlag inför sportsbetting, tipset eller bara vill hänga med i matchanalysen.</p>
+      <ul class="features"><li>Prognos för matchutfall (1X2) baserat på modifierad Poisson-fördelning</li><li>Stöd för svenska, engelska och ryska – välj ditt språk</li><li>Snabb svarstid – få din prognos inom sekunder</li><li>Täcker ett brett utbud av fotbollsmatcher via API-Football</li><li>Enkel att använda – skriv ett lag eller match, få analysen direkt</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Sportintresserade, tipsare och betting-entusiaster som vill ha snabba, databaserade matchprognoser utan att behöva sätta sig in i komplex statistik själva</p>
+      <p class="meta">Enhet: prognoser</p>
+      <p class="meta">Exempel: Användaren skriver &#x27;Arsenal vs Chelsea&#x27; och får en prognos med sannolikheter för hemmaseger, oavgjort och bortaseger – t.ex. Hemmaseger 48%, Oavgjort 27%, Bortaseger 25%</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">aiogram 3</span><span class="tag">scikit-learn</span><span class="tag">FastAPI</span><span class="tag">SQLite</span><span class="tag">API-Football</span><span class="tag">SciPy</span><span class="tag">pandas</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">Produktivitet &amp; AI-analys</span>
+        <h2>Pocket – AI-mötesanalys via röst</h2>
+        <p class="tagline">Skicka ett röstmeddelande eller ljudfil och få en komplett AI-analys av samtalet på sekunder</p>
+      </div>
+      <p class="description">Pocket låter dig skicka röstmeddelanden eller ljudinspelningar direkt i Telegram och få tillbaka en strukturerad analys: vem som sade vad, sammanfattning av mötet, konkreta åtgärdspunkter och nyckelinsikter. Perfekt för dig som vill sluta anteckna under möten och istället fokusera på samtalet. Varje analys sparas i din session och kan exporteras som PDF med ett enda kommando.</p>
+      <ul class="features"><li>Automatisk transkription av röstmeddelanden och ljudfiler med hög precision</li><li>Talaridentifiering – boten skiljer på olika röster och märker upp vem som sade vad</li><li>AI-genererad sammanfattning, action items, lösningsförslag och nyckelinsikter via Claude</li><li>Sessionshistorik per användare – alla analyser i en och samma chatt sparas</li><li>PDF-export av hela sessionens transkriptioner och analyser med kommandot /export</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Konsulter, team-leads, chefer, frilansare och alla som håller möten, intervjuer eller brainstorming-sessioner och vill ha strukturerade anteckningar utan manuellt arbete</p>
+      <p class="meta">Enhet: analyser</p>
+      <p class="meta">Exempel: Användaren skickar en 10-minuters mötesinspelning → boten identifierar 3 talare, transkriberar hela samtalet, genererar en sammanfattning, listar 5 action items och exporterar allt som PDF</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">Groq Whisper</span><span class="tag">Anthropic Claude</span><span class="tag">pyannote.audio</span><span class="tag">Telegram Bot API</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">Personlig utveckling &amp; AI-media</span>
+        <h2>Affirmations Avatar</h2>
+        <p class="tagline">Skapa din egen pratande avatar-video med en personlig affirmation – direkt i Telegram</p>
+      </div>
+      <p class="description">Ladda upp ett foto och skriv din önskade affirmation – tjänsten genererar en professionell video där din avatar talar orden med en naturlig AI-röst. Du får även en subliminal version med trippel hastighet och shamanisk bakgrundsmusik, designad för djupare påverkan på undermedvetandet. Perfekt för daglig motivation, manifestation och personlig utveckling.</p>
+      <ul class="features"><li>Ladda upp valfritt porträttfoto och få en realistisk pratande avatar-video</li><li>AI-genererad affirmationstext anpassad efter ditt syfte</li><li>Naturlig röst via ElevenLabs som läser upp din affirmation</li><li>Subliminal version inkluderad – 3× hastighet med shamanisk bakgrundsmusik på 7 %</li><li>Båda videorna levereras direkt till dig i Telegram</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Personer som arbetar med personlig utveckling, manifestation, mindset-coaching eller dagliga affirmationer – och vill ha ett kraftfullt visuellt verktyg som förstärker sitt inre arbete.</p>
+      <p class="meta">Enhet: genereringar</p>
+      <p class="meta">Exempel: Användaren skickar ett selfie och skriver &#x27;Jag är stark, fokuserad och framgångsrik&#x27; – och får tillbaka två videor: en där avataren talar affirmationen med röst, och en subliminal version med shamanisk musik.</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">Claude API</span><span class="tag">ElevenLabs</span><span class="tag">HeyGen</span><span class="tag">FFmpeg</span><span class="tag">Telegram Bot API</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">Musik &amp; E-handel</span>
+        <h2>MusicStore – Din digitala musikbutik via Telegram</h2>
+        <p class="tagline">Bläddra bland låtar och köp musik direkt i Telegram – enkelt, snabbt och säkert</p>
+      </div>
+      <p class="description">MusicStore är en Telegram-tjänst där du enkelt kan utforska ett musikbibliotek, se låtinformation med omslagsbilder och köpa digitala spår med ett knapptryck. Tjänsten hanterar hela köpflödet direkt i chatten – från katalogbläddring till betalning via Stripe. Perfekt för artister och skivbolag som vill sälja musik utan krånglig webbutik.</p>
+      <ul class="features"><li>Bläddra i musikkatalogen med omslagsbilder och låtbeskrivningar direkt i Telegram</li><li>Se detaljerad information om varje spår – pris, genre och metadata</li><li>Köp låtar säkert via inbyggd betalning (Stripe) utan att lämna Telegram</li><li>Nya releases visas alltid först i katalogen</li><li>Stöd för Mini App-gränssnitt för en rikare shoppingupplevelse</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Musiker, producenter och skivbolag som vill sälja digitala spår direkt till sina fans – utan att behöva bygga en egen webbutik. Även musikälskare som vill upptäcka och köpa ny musik smidigt.</p>
+      <p class="meta">Enhet: köp</p>
+      <p class="meta">Exempel: Användaren öppnar boten, bläddrar i katalogen, trycker på en låt och ser omslagsbild, pris och beskrivning – sedan genomförs köpet direkt i Telegram med ett knapptryck.</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">python-telegram-bot</span><span class="tag">Stripe</span><span class="tag">Flask</span><span class="tag">Google API</span><span class="tag">Pillow</span><span class="tag">Mutagen</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">Onboarding &amp; Navigering</span>
+        <h2>Välkomstporten</h2>
+        <p class="tagline">Din smarta ingång till alla Telegram-tjänster – på ett ställe</p>
+      </div>
+      <p class="description">Välkomstporten är en Telegram-baserad hubb som tar emot nya användare, guidar dem till rätt tjänster och säkerställer att de är anslutna till kanalen. Perfekt som startpunkt för dig som vill ge dina kunder en professionell och smidig onboarding-upplevelse direkt i Telegram. Användaren möts av en välkomsthälsning och får sedan enkel åtkomst till hela utbudet av tillgängliga botar och tjänster.</p>
+      <ul class="features"><li>Automatisk välkomsthälsning med logotyp när en ny användare startar boten</li><li>Verifierar att användaren prenumererar på kanalen innan åtkomst ges</li><li>Visar en klickbar lista över alla tillgängliga tjänster och botar direkt i chatten</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Företag och skapare som vill ha en professionell och strukturerad ingång till sina Telegram-tjänster, samt nya användare som snabbt vill hitta och komma igång med rätt verktyg</p>
+      <p class="meta">Enhet: anslutningar</p>
+      <p class="meta">Exempel: En ny användare startar boten, får en välkomsthälsning med bild, klickar för att bekräfta sin kanal-prenumeration och ser sedan en lista med direktlänkar till alla tillgängliga tjänster</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">aiogram</span><span class="tag">Telegram Bot API</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">AI &amp; Produktivitet</span>
+        <h2>HuggingFace AI-assistent</h2>
+        <p class="tagline">Chatta med kraftfulla AI-modeller direkt i Telegram — utan krångel</p>
+      </div>
+      <p class="description">Med HuggingFace AI-assistenten får du tillgång till avancerade AI-modeller från HuggingFace direkt i din Telegram-app. Ställ frågor, få hjälp med text, kod, analys eller kreativt skrivande — allt utan att behöva skapa konton eller hantera tekniska verktyg. Betala enkelt per förfrågan och använd AI precis när du behöver det.</p>
+      <ul class="features"><li>Chatta med HuggingFace AI-modeller direkt i Telegram</li><li>Få svar på frågor, texthjälp, kodgranskning och mycket mer</li><li>Asynkron och snabb svarstid tack vare modern teknologi</li><li>Historik och konversationsminne under sessionen</li><li>Enkel pay-per-use — betala bara för det du faktiskt använder</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Frilansare, utvecklare, studenter och nyfikna användare som vill ha snabb AI-hjälp utan abonnemang eller komplicerade verktyg</p>
+      <p class="meta">Enhet: förfrågningar</p>
+      <p class="meta">Exempel: Användaren skriver &#x27;Förklara rekursion i Python med ett enkelt exempel&#x27; och får ett tydligt, AI-genererat svar direkt i Telegram-chatten</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">python-telegram-bot</span><span class="tag">HuggingFace Hub</span><span class="tag">aiosqlite</span><span class="tag">aiohttp</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">E-handel</span>
+        <h2>Shopify Kundsökning AI</h2>
+        <p class="tagline">Hitta rätt kunder i din Shopify-butik med vanlig svenska – direkt i Telegram</p>
+      </div>
+      <p class="description">Med Shopify Kundsökning AI skriver du enkelt vad du letar efter på vanlig text, och boten omvandlar automatiskt din fråga till en exakt sökning mot din Shopify-butik. Du får tillbaka matchande kunder på sekunder – utan att behöva kunna filterkoder eller Admin-gränssnitt. Perfekt för butikägare och kundtjänstteam som vill jobba snabbt och smidigt direkt från mobilen.</p>
+      <ul class="features"><li>Sök kunder med naturlig text – skriv t.ex. &#x27;kunder från Stockholm som handlat senaste månaden&#x27;</li><li>AI tolkar din fråga och bygger rätt sökning mot Shopify Admin API automatiskt</li><li>Få kundresultat presenterade direkt i Telegram-chatten</li><li>Stöd för komplexa sökningar utan teknisk kunskap</li><li>Fungerar som en intelligent assistent kopplad till din befintliga Shopify-butik</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Shopify-butikägare, e-handlare och kundtjänstpersonal som vill söka och hitta kunder snabbt utan att logga in i Shopify Admin</p>
+      <p class="meta">Enhet: förfrågningar</p>
+      <p class="meta">Exempel: Användaren skriver &#x27;visa kunder som beställt mer än 3 gånger&#x27; och boten returnerar en lista med matchande Shopify-kunder direkt i Telegram</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">FastAPI</span><span class="tag">OpenRouter</span><span class="tag">LLaMA 3.3 70B</span><span class="tag">OpenAI GPT-4o-mini</span><span class="tag">Shopify Admin API</span><span class="tag">Telegram Bot API</span><span class="tag">SQLAlchemy</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">E-handel &amp; analys</span>
+        <h2>Shopify Kundanalys-bot</h2>
+        <p class="tagline">Sök produkter och se unika köpare direkt i Telegram – kopplat till din Shopify-butik</p>
+      </div>
+      <p class="description">Med Shopify Kundanalys-boten kan du söka efter valfri produkt i din Shopify-butik och direkt få en lista över unika kunder som har köpt den. Tjänsten sparar tid för dig som driver e-handel och behöver snabb insikt om vilka kunder som köpt specifika produkter – utan att behöva logga in i Shopify-adminpanelen. Perfekt för uppföljning, segmentering och kundkommunikation.</p>
+      <ul class="features"><li>Sök efter produkter i din Shopify-butik via ett enkelt textmeddelande</li><li>Få en sammanställning av unika köpare kopplade till en specifik produkt</li><li>Snabb åtkomst direkt i Telegram – ingen inloggning eller adminpanel krävs</li><li>Interaktiv navigering med knappar för att välja bland sökresultat</li><li>Skyddad åtkomst – endast auktoriserade användare kan använda tjänsten</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> E-handlare och Shopify-butiksägare som vill snabbt analysera kundköp per produkt, arbeta med kunduppföljning eller förbereda riktade kampanjer utan att behöva öppna Shopify-adminpanelen.</p>
+      <p class="meta">Enhet: förfrågningar</p>
+      <p class="meta">Exempel: Användaren skriver &#x27;blå hoodie&#x27; i Telegram → boten visar matchande produkter från Shopify-butiken → användaren väljer en produkt → boten listar alla unika kunder som beställt just den produkten</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">Shopify API</span><span class="tag">python-telegram-bot</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">AI &amp; Produktivitet</span>
+        <h2>AI-Assistent via Telegram</h2>
+        <p class="tagline">Chatta med en kraftfull AI direkt i Telegram – få svar på vad du än undrar</p>
+      </div>
+      <p class="description">Använd en smart AI-assistent direkt i Telegram utan att installera några appar eller skapa konton. Skriv din fråga, få ett genomtänkt svar inom sekunder. Boten minns konversationens sammanhang så du kan föra naturliga dialoger precis som med ChatGPT.</p>
+      <ul class="features"><li>Ställ obegränsade frågor till en avancerad AI-modell direkt i Telegram</li><li>Boten minns tidigare meddelanden i konversationen för naturlig dialog</li><li>Fungerar för allt från textskrivning och brainstorming till frågor och problemlösning</li><li>Enkel att starta – skriv bara din fråga och få svar direkt</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Alla som vill ha snabb tillgång till AI-hjälp i vardagen – studenter, frilansare, entreprenörer och nyfikna användare som vill spara tid med hjälp av AI</p>
+      <p class="meta">Enhet: förfrågningar</p>
+      <p class="meta">Exempel: Användaren skriver &#x27;Skriv ett professionellt mejl där jag tackar nej till ett jobberbjudande&#x27; och får ett färdigt mejlutkast direkt i chatten</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">OpenRouter</span><span class="tag">GPT-4o-mini</span><span class="tag">PostgreSQL</span><span class="tag">python-telegram-bot</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
+    </article>
+    
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">E-handel &amp; försäljning</span>
+        <h2>Blocket Bildbot</h2>
+        <p class="tagline">Ladda upp en produktbild – få 4 proffsiga annonsbilder till Blocket på sekunder</p>
+      </div>
+      <p class="description">Blocket Bildbot hjälper dig att sälja snabbare genom att omvandla en vanlig produktbild till fyra professionella varianter anpassade för Blocket-annonser. Med hjälp av avancerad AI-bildgenerering får du bilder på modell (man), modell (kvinna), flat lay och lifestyle – utan fotostudio eller designer. Perfekt för dig som vill sticka ut i flödet och få fler klick på din annons.</p>
+      <ul class="features"><li>Skicka ett foto på din produkt och få 4 färdiga annonsbilder automatiskt</li><li>Fyra stilar per generation: man i studio, kvinna i studio, flat lay och lifestyle</li><li>Blixtsnabb leverans direkt i Telegram – inga appar att ladda ner</li><li>Drivs av Google Gemini – branschledande AI-bildgenerering</li><li>Fungerar för kläder, prylar, möbler, accessoarer och mycket mer</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Privatpersoner och småföretagare som säljer på Blocket och vill ha professionella produktbilder utan kostnad för fotograf eller studio</p>
+      <p class="meta">Enhet: generationer</p>
+      <p class="meta">Exempel: Användaren skickar ett foto på ett par skor → boten genererar 4 bilder: skorna på en man i studio, på en kvinna i studio, ovanifrån (flat lay) och i en naturlig livsstilsmiljö – klara att ladda upp på Blocket</p>
+      <div class="tech-stack"><span class="tag">Python</span><span class="tag">Google Gemini 2.5 Flash Image</span><span class="tag">Telegram Bot API</span><span class="tag">Pillow</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+      </div>
     </article>
     
     </div>
@@ -189,9 +410,9 @@
 
   <section id="kontakt">
     <div class="container">
-      <h2>Intresserad?</h2>
-      <p>Kontakta oss för pris och demo.</p>
-      <p style="margin-top: 1rem;">Stripe-betalning kan kopplas in senare — byt ut knappen «Köp / fråga» mot din betalningslänk.</p>
+      <h2>Kom igång</h2>
+      <p><a href="mailto:din@email.se">din@email.se</a></p>
+      <p style="margin-top: 1rem;">Välj ett kreditpaket ovan och betala via Stripe — sedan använder du tjänsten direkt i Telegram.</p>
     </div>
   </section>
 

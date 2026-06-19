@@ -33,7 +33,57 @@ MIN_PRICE_SEK = int(os.environ.get("MIN_PRICE_SEK", "29"))
 MAX_PRICE_SEK = int(os.environ.get("MAX_PRICE_SEK", "499"))
 CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
 
-# Контекст бизнес-модели — передаётся во все промпты Claude
+# Заглушки e-post — не показывать на сайте
+PLACEHOLDER_CONTACT_EMAILS = frozenset({
+    "din@email.se",
+    "din@email.com",
+    "kontakt@example.com",
+    "your@email.com",
+    "example@example.com",
+})
+# ──────────────────────────────────────────────────────────────────────────────
+
+
+def is_placeholder_contact_email(email):
+    """Проверяет, что email — заглушка из .env.example."""
+    if not email or not str(email).strip():
+        return True
+    normalized = str(email).strip().lower()
+    if normalized in PLACEHOLDER_CONTACT_EMAILS:
+        return True
+    return normalized.endswith("@example.com")
+
+
+def resolve_contact_email(pricing_data=None):
+    """Возвращает реальный email: .env → pricing JSON, без заглушек."""
+    candidates = [CONTACT_EMAIL]
+    if pricing_data and isinstance(pricing_data, dict):
+        candidates.append(pricing_data.get("contact_email", ""))
+    for email in candidates:
+        if email and not is_placeholder_contact_email(email):
+            return str(email).strip()
+    return ""
+
+
+def warn_if_placeholder_contact_email():
+    """Предупреждает, если в .env осталась заглушка."""
+    if is_placeholder_contact_email(CONTACT_EMAIL):
+        print("  ⚠️  CONTACT_EMAIL är en platshållare (t.ex. din@email.se).")
+        print("     Uppdatera .env med din riktiga e-post innan publicering.")
+
+
+def build_contact_block(pricing_data=None):
+    """HTML-блок контакта с реальным email или понятным сообщением."""
+    email = resolve_contact_email(pricing_data)
+    if email:
+        safe_email = escape_text(email)
+        return f'<a href="mailto:{safe_email}">{safe_email}</a>'
+    return (
+        '<span class="contact-missing">Kontakt-e-post saknas — '
+        "sätt <code>CONTACT_EMAIL</code> i <code>.env</code> "
+        "(ersätt <code>din@email.se</code> med din riktiga adress).</span>"
+    )
+
 BUSINESS_MODEL_CONTEXT = """
 AFFÄRESMODELL (VIKTIGT — följ detta strikt):
 - Du säljer INTE botarna, koden eller GitHub-repona
@@ -249,7 +299,7 @@ def generate_pricing_with_claude(bots):
         return None
 
     bots_json = json.dumps(bots, ensure_ascii=False, indent=2)
-    contact_hint = CONTACT_EMAIL or "kontakt@example.com"
+    contact_hint = resolve_contact_email() or "ange riktig e-post i CONTACT_EMAIL"
 
     prompt = f"""Du är en prissättningsstrateg för Telegram-baserade tjänster i Sverige.
 
@@ -364,7 +414,7 @@ KRAV:
 10. Använd riktiga tjänstenamn från JSON — hitta inte på tjänster
 11. Svara ENDAST med rå HTML
 
-Kontakt: {CONTACT_EMAIL or pricing_data.get("contact_email", "kontakt@example.com")}
+Kontakt: {resolve_contact_email(pricing_data) or "sätt CONTACT_EMAIL i .env — använd INTE din@email.se"}
 """
 
     print("  🎨 Claude skapar tjänstelandningssida (HTML)...")
@@ -424,26 +474,169 @@ def build_bot_card(bot):
       {f'<p class="meta">Exempel: {example_usage}</p>' if example_usage else ""}
       <div class="tech-stack">{tech_tags}</div>
       <div class="bot-card-actions">
-        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
+        <a class="btn btn-primary" href="#priser">Köp krediter</a>
       </div>
     </article>
+    """
+
+
+def build_credit_package_card(package):
+    """HTML-карточка одного кредитного пакета."""
+    recommended = package.get("recommended", False)
+    badge = '<span class="recommended-badge">Rekommenderad</span>' if recommended else ""
+    label = escape_text(package.get("label", f"{package.get('credits', '')} krediter"))
+    price = escape_text(package.get("price_sek", ""))
+    price_per = package.get("price_per_credit_sek")
+    per_credit = (
+        f'<span class="per-credit">{escape_text(price_per)} kr/st</span>'
+        if price_per is not None
+        else ""
+    )
+    card_class = "price-card recommended" if recommended else "price-card"
+    return f"""
+    <div class="{card_class}">
+      {badge}
+      <h4>{label}</h4>
+      <p class="price-amount">{price} kr</p>
+      {per_credit}
+      <a class="btn btn-primary" href="#kontakt">Välj paket</a>
+    </div>
+    """
+
+
+def build_service_pricing_block(service):
+    """Блок цен для одного сервиса."""
+    name = escape_text(service.get("display_name", service.get("repo_name", "Tjänst")))
+    usage_unit = escape_text(service.get("usage_unit", "förfrågningar"))
+    example = escape_text(service.get("example", ""))
+    packages = service.get("credit_packages") or []
+    package_cards = "".join(build_credit_package_card(pkg) for pkg in packages)
+    if not package_cards:
+        return ""
+    return f"""
+    <div class="service-pricing">
+      <h3>{name}</h3>
+      <p class="usage-unit">Enhet: {usage_unit}</p>
+      {f'<p class="pricing-example">{example}</p>' if example else ""}
+      <div class="price-grid">{package_cards}</div>
+    </div>
+    """
+
+
+def build_combo_packages_block(pricing_data):
+    """HTML для комбо-пакетов."""
+    combos = pricing_data.get("combo_packages") or []
+    if not combos:
+        return ""
+
+    cards = []
+    for combo in combos:
+        recommended = combo.get("recommended", False)
+        badge = '<span class="recommended-badge">Rekommenderad</span>' if recommended else ""
+        name = escape_text(combo.get("name", "Kombopaket"))
+        tagline = escape_text(combo.get("tagline", ""))
+        description = escape_text(combo.get("description", ""))
+        price = escape_text(combo.get("price_sek", ""))
+        includes = combo.get("includes") or []
+        include_items = "".join(
+            f"<li>{escape_text(item.get('credits', ''))} "
+            f"{escape_text(item.get('usage_unit', 'krediter'))} "
+            f"({escape_text(item.get('repo_name', ''))})</li>"
+            for item in includes
+        )
+        card_class = "combo-card recommended" if recommended else "combo-card"
+        cards.append(f"""
+        <div class="{card_class}">
+          {badge}
+          <h4>{name}</h4>
+          <p class="tagline">{tagline}</p>
+          <p>{description}</p>
+          <ul class="combo-includes">{include_items}</ul>
+          <p class="price-amount">{price} kr</p>
+          <a class="btn btn-primary" href="#kontakt">Välj paket</a>
+        </div>
+        """)
+
+    return f"""
+    <div class="combo-section">
+      <h3>Kombopaket</h3>
+      <div class="combo-grid">{"".join(cards)}</div>
+    </div>
+    """
+
+
+def build_how_it_works_block(pricing_data):
+    """Секция «Как это работает»."""
+    steps = pricing_data.get("how_it_works") if pricing_data else None
+    if not steps:
+        steps = [
+            "Välj kreditpaket för den tjänst du vill använda",
+            "Betala via Stripe (kopplas in snart)",
+            "Öppna boten i Telegram och använd dina krediter",
+        ]
+    step_items = "".join(f"<li>{escape_text(step)}</li>" for step in steps)
+    return f"""
+    <section id="sa-fungerar-det" class="section-block">
+      <div class="container">
+        <h2>Så fungerar det</h2>
+        <ol class="steps-list">{step_items}</ol>
+      </div>
+    </section>
+    """
+
+
+def build_pricing_section(pricing_data):
+    """Полная секция с кредитными пакетами."""
+    if not is_current_pricing_format(pricing_data):
+        return """
+    <section id="priser" class="section-block pricing-missing">
+      <div class="container">
+        <h2>Kreditpaket</h2>
+        <p class="pricing-missing-text">
+          Priser saknas ännu. Kör:
+          <code>python generate_bot_descriptions.py --html-only --fresh-pricing</code>
+        </p>
+      </div>
+    </section>
+    """
+
+    services = pricing_data.get("services") or []
+    service_blocks = "".join(build_service_pricing_block(svc) for svc in services)
+    combo_block = build_combo_packages_block(pricing_data)
+    summary = escape_text(pricing_data.get("pricing_strategy_summary", ""))
+
+    return f"""
+    <section id="priser" class="section-block">
+      <div class="container">
+        <h2>Kreditpaket &amp; priser</h2>
+        {f'<p class="pricing-summary">{summary}</p>' if summary else ""}
+        {service_blocks}
+        {combo_block}
+      </div>
+    </section>
     """
 
 
 def build_fallback_landing_html(output_data):
     """Простая резервная страница, если Claude не смог создать HTML."""
     bots = output_data.get("bots", [])
+    pricing_data = output_data.get("pricing")
     username = escape_text(output_data.get("username", GITHUB_USERNAME))
     generated_at = escape_text(output_data.get("generated_at", ""))
     total = output_data.get("total_bots", len(bots))
     site_title = escape_text(SITE_TITLE)
-    contact_block = (
-        f'<a href="mailto:{escape_text(CONTACT_EMAIL)}">{escape_text(CONTACT_EMAIL)}</a>'
-        if CONTACT_EMAIL
-        else "Kontakta oss för pris och demo."
+    contact_block = build_contact_block(pricing_data)
+    has_pricing = is_current_pricing_format(pricing_data)
+    contact_cta = (
+        "Välj ett kreditpaket ovan och betala via Stripe — "
+        "sedan använder du tjänsten direkt i Telegram."
+        if has_pricing
+        else "När kreditpaketen är genererade kan du betala via Stripe och använda tjänsten i Telegram."
     )
 
     cards = "".join(build_bot_card(bot) for bot in bots)
+    how_it_works = build_how_it_works_block(pricing_data)
+    pricing_section = build_pricing_section(pricing_data)
 
     return f"""<!DOCTYPE html>
 <html lang="sv">
@@ -577,6 +770,69 @@ def build_fallback_landing_html(output_data):
     }}
     .btn-secondary:hover {{ background: var(--surface-hover); }}
     .meta {{ font-size: 0.8rem; color: var(--muted); }}
+    .section-block {{ padding: 3rem 0; border-top: 1px solid var(--border); }}
+    .section-block h2 {{ text-align: center; margin-bottom: 1.5rem; }}
+    .steps-list {{
+      max-width: 640px;
+      margin: 0 auto;
+      padding-left: 1.25rem;
+      color: var(--muted);
+    }}
+    .steps-list li {{ margin-bottom: 0.5rem; }}
+    .pricing-summary {{
+      text-align: center;
+      color: var(--muted);
+      max-width: 720px;
+      margin: 0 auto 2rem;
+    }}
+    .service-pricing {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }}
+    .service-pricing h3 {{ margin-bottom: 0.35rem; }}
+    .usage-unit, .pricing-example {{ color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem; }}
+    .price-grid, .combo-grid {{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }}
+    .price-card, .combo-card {{
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }}
+    .price-card.recommended, .combo-card.recommended {{
+      border-color: var(--success);
+      box-shadow: 0 0 0 1px var(--success);
+    }}
+    .recommended-badge {{
+      display: inline-block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--success);
+      font-weight: 700;
+    }}
+    .price-amount {{ font-size: 1.5rem; font-weight: 700; }}
+    .per-credit {{ font-size: 0.85rem; color: var(--muted); }}
+    .combo-section {{ margin-top: 2rem; }}
+    .combo-section h3 {{ margin-bottom: 1rem; }}
+    .combo-includes {{ list-style: none; color: var(--muted); font-size: 0.9rem; }}
+    .combo-includes li::before {{ content: "✓ "; color: var(--success); }}
+    .pricing-missing-text, .contact-missing {{ color: var(--muted); }}
+    .pricing-missing-text code, .contact-missing code {{
+      background: var(--surface);
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+    }}
     #kontakt {{
       background: var(--surface);
       border-top: 1px solid var(--border);
@@ -611,7 +867,12 @@ def build_fallback_landing_html(output_data):
     </div>
   </header>
 
-  <main class="container">
+  {how_it_works}
+
+  {pricing_section}
+
+  <main class="container section-block">
+    <h2>Våra tjänster</h2>
     <div class="grid">
       {cards}
     </div>
@@ -621,7 +882,7 @@ def build_fallback_landing_html(output_data):
     <div class="container">
       <h2>Kom igång</h2>
       <p>{contact_block}</p>
-      <p style="margin-top: 1rem;">Välj ett kreditpaket ovan och betala via Stripe — sedan använder du tjänsten direkt i Telegram.</p>
+      <p style="margin-top: 1rem;">{contact_cta}</p>
     </div>
   </section>
 
@@ -656,11 +917,12 @@ def is_current_pricing_format(pricing_data):
     return True
 
 
-def update_pricing_if_needed(output_data, fresh_pricing=False, require_for_claude=False):
+def update_pricing_if_needed(output_data, fresh_pricing=False, require_for_claude=False, require_for_html=False):
     """Генерирует pricing при --fresh-pricing, отсутствии или устаревшем формате."""
     existing_pricing = output_data.get("pricing")
     has_valid_pricing = is_current_pricing_format(existing_pricing)
-    should_generate = fresh_pricing or (require_for_claude and not has_valid_pricing)
+    needs_pricing = require_for_claude or require_for_html
+    should_generate = fresh_pricing or (needs_pricing and not has_valid_pricing)
 
     if not should_generate:
         return existing_pricing
@@ -678,12 +940,14 @@ def update_pricing_if_needed(output_data, fresh_pricing=False, require_for_claud
 
 def save_landing_page(output_data, use_claude=True, use_template=False, fresh_pricing=False):
     """Сохраняет HTML-лендинг: через Claude или резервный шаблон."""
+    warn_if_placeholder_contact_email()
     html_content = None
     require_for_claude = use_claude and not use_template
     pricing_data = update_pricing_if_needed(
         output_data,
         fresh_pricing=fresh_pricing,
         require_for_claude=require_for_claude,
+        require_for_html=True,
     )
 
     if require_for_claude and pricing_data:

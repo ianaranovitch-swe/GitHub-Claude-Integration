@@ -188,7 +188,7 @@ python generate_bot_descriptions.py --html-only --fresh-pricing
 | `REPO_FILTER` | Нет | `bots` или `all` (если не передан аргумент `--bots-only` / `--all`) |
 | `SITE_TITLE` | Нет | Заголовок HTML-страницы |
 | `OUTPUT_HTML` | Нет | Имя HTML-файла (по умолчанию: `index.html`) |
-| `CONTACT_EMAIL` | Нет | Email в блоке «Kontakt» на лендинге |
+| `CONTACT_EMAIL` | **Ja** (för publicering) | E-post på landningssidan — **ersätt** `din@email.se` med din riktiga adress |
 
 ---
 
