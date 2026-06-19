@@ -29,7 +29,56 @@ OUTPUT_FILE = "bot_descriptions.json"
 OUTPUT_HTML = os.environ.get("OUTPUT_HTML", "index.html")
 SITE_TITLE = os.environ.get("SITE_TITLE", "Telegram-botar till salu")
 CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "")
+MIN_PRICE_SEK = int(os.environ.get("MIN_PRICE_SEK", "99"))
+MAX_PRICE_SEK = int(os.environ.get("MAX_PRICE_SEK", "299"))
+CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
 # ──────────────────────────────────────────────────────────────────────────────
+
+
+def call_claude(prompt, max_tokens=1000):
+    """Общий вызов Claude API через ключ из .env."""
+    resp = requests.post(
+        "https://api.anthropic.com/v1/messages",
+        headers={
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json",
+        },
+        json={
+            "model": CLAUDE_MODEL,
+            "max_tokens": max_tokens,
+            "messages": [{"role": "user", "content": prompt}],
+        },
+        timeout=120,
+    )
+
+    if resp.status_code != 200:
+        print(f"  ❌ Claude API-fel: {resp.status_code} – {resp.text[:300]}")
+        return None
+
+    return resp.json()["content"][0]["text"].strip()
+
+
+def clean_json_response(raw):
+    """Убирает markdown-обёртку вокруг JSON от Claude."""
+    cleaned = raw.replace("```json", "").replace("```", "").strip()
+    return json.loads(cleaned)
+
+
+def clean_html_response(raw):
+    """Убирает markdown-обёртку вокруг HTML от Claude."""
+    text = raw.strip()
+    if text.startswith("```"):
+        lines = text.split("\n")
+        if lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip() == "```":
+            lines = lines[:-1]
+        text = "\n".join(lines).strip()
+    if not text.lower().startswith("<!doctype") and not text.lower().startswith("<html"):
+        print("  ⚠️  Claude returnerade ogiltig HTML — använder reservmall.")
+        return None
+    return text
 
 
 def get_github_headers():
@@ -156,34 +205,126 @@ REPO-INFORMATION:
 {repo_context}
 """
 
-    resp = requests.post(
-        "https://api.anthropic.com/v1/messages",
-        headers={
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "content-type": "application/json",
-        },
-        json={
-            "model": "claude-sonnet-4-6",
-            "max_tokens": 1000,
-            "messages": [{"role": "user", "content": prompt}],
-        },
-        timeout=60,
-    )
-
-    if resp.status_code != 200:
-        print(f"  ❌ Claude API-fel: {resp.status_code} – {resp.text[:200]}")
+    raw = call_claude(prompt, max_tokens=1000)
+    if not raw:
         return None
 
-    raw = resp.json()["content"][0]["text"].strip()
-    raw = raw.replace("```json", "").replace("```", "").strip()
-
     try:
-        return json.loads(raw)
+        return clean_json_response(raw)
     except json.JSONDecodeError as err:
         print(f"  ⚠️  Kunde inte parsa JSON: {err}")
         print(f"  Råsvar: {raw[:300]}")
         return {"name": repo_name, "raw_description": raw}
+
+
+def generate_pricing_with_claude(bots):
+    """Claude создаёт пакеты, цены и распределение ботов."""
+    if not bots:
+        return None
+
+    bots_json = json.dumps(bots, ensure_ascii=False, indent=2)
+    contact_hint = CONTACT_EMAIL or "kontakt@example.com"
+
+    prompt = f"""Du är en prissättnings- och produktstrateg som säljer Telegram-botar i Sverige.
+
+Baserat på botlistan nedan ska du skapa en komplett prissättningsstrategi på SVENSKA.
+
+REGLER:
+- Valuta: SEK (kr)
+- Varje enskild bot: pris mellan {MIN_PRICE_SEK} och {MAX_PRICE_SEK} kr
+- Skapa 2–4 paket (t.ex. Starter, Pro, Business, Komplett) med logisk gruppering
+- Paketpris ska vara attraktivt (rabatt jämfört med att köpa botarna var för sig)
+- Paketpris får också ligga mellan {MIN_PRICE_SEK} och {MAX_PRICE_SEK} kr per bot i snitt, men totalpaketpris kan vara högre om flera botar ingår
+- Välj själv vilka botar som passar i vilket paket baserat på kategori, målgrupp och nytta
+- Markera ett paket som "recommended": true om det passar bäst för de flesta
+- Sätt suggested_price per bot baserat på komplexitet och värde
+
+Svara ENDAST med JSON (ingen markdown):
+{{
+  "currency": "SEK",
+  "pricing_strategy_summary": "Kort förklaring av din strategi på svenska",
+  "individual_bots": [
+    {{
+      "repo_name": "exakt repo_name från listan",
+      "display_name": "Säljande namn",
+      "price_sek": 149,
+      "price_rationale": "Varför detta pris"
+    }}
+  ],
+  "packages": [
+    {{
+      "id": "starter",
+      "name": "Paketnamn på svenska",
+      "tagline": "Kort säljande mening",
+      "description": "2-3 meningar om paketet",
+      "price_sek": 249,
+      "original_price_sek": 349,
+      "bots_included": ["repo_name1", "repo_name2"],
+      "features": ["Vad kunden får 1", "Vad kunden får 2"],
+      "ideal_for": "Målgrupp",
+      "recommended": false
+    }}
+  ],
+  "contact_email": "{contact_hint}"
+}}
+
+BOTLISTA:
+{bots_json}
+"""
+
+    print("  💰 Claude planerar paket och priser...")
+    raw = call_claude(prompt, max_tokens=4000)
+    if not raw:
+        return None
+
+    try:
+        return clean_json_response(raw)
+    except json.JSONDecodeError as err:
+        print(f"  ⚠️  Kunde inte parsa prissättning: {err}")
+        print(f"  Råsvar: {raw[:400]}")
+        return None
+
+
+def generate_landing_html_with_claude(output_data, pricing_data):
+    """Claude создаёт полную продающую HTML-страницу."""
+    bots_json = json.dumps(output_data.get("bots", []), ensure_ascii=False, indent=2)
+    pricing_json = json.dumps(pricing_data, ensure_ascii=False, indent=2)
+    site_title = SITE_TITLE
+    username = output_data.get("username", GITHUB_USERNAME)
+    generated_at = output_data.get("generated_at", "")
+
+    prompt = f"""Du är en senior webbdesigner och copywriter som bygger högkvalitativa säljlandningssidor.
+
+Skapa en komplett, professionell HTML-landningssida på SVENSKA för att sälja Telegram-botar.
+
+DATA:
+- Sajttitel: {site_title}
+- Säljare/GitHub: @{username}
+- Genererad: {generated_at}
+- Botbeskrivningar (JSON): {bots_json}
+- Prissättning och paket (JSON): {pricing_json}
+
+KRAV:
+1. Returnera EN komplett HTML-fil med inbäddad CSS (ingen extern CSS/JS, inga CDN-länkar)
+2. Modern, professionell, säljande design — mörkt tema, tydliga CTA-knappar
+3. Sektioner: Hero, Fördelar, Paket/priser (med recommended-badge), Enskilda botar, FAQ (4-6 frågor), Kontakt/footer
+4. Visa priser tydligt i SEK (kr) enligt pricing JSON
+5. Paketkort ska lista vilka botar som ingår
+6. Varje köpknapp: href="#kontakt" med text som "Köp nu" eller "Välj paket"
+7. Responsiv design (mobil + desktop)
+8. Svenska språket genomgående
+9. Använd riktiga botnamn, beskrivningar och funktioner från JSON — hitta inte på botar som inte finns
+10. Lägg till meta viewport och meta description
+11. Svara ENDAST med rå HTML — ingen markdown, ingen förklaring före eller efter
+
+Kontakt-e-post: {CONTACT_EMAIL or pricing_data.get("contact_email", "kontakt@example.com")}
+"""
+
+    print("  🎨 Claude skapar säljlandningssida (HTML)...")
+    raw = call_claude(prompt, max_tokens=16000)
+    if not raw:
+        return None
+    return clean_html_response(raw)
 
 
 def is_telegram_bot(repo):
@@ -242,8 +383,8 @@ def build_bot_card(bot):
     """
 
 
-def build_landing_html(output_data):
-    """Создаёт полную HTML-страницу из JSON-данных."""
+def build_fallback_landing_html(output_data):
+    """Простая резервная страница, если Claude не смог создать HTML."""
     bots = output_data.get("bots", [])
     username = escape_text(output_data.get("username", GITHUB_USERNAME))
     generated_at = escape_text(output_data.get("generated_at", ""))
@@ -445,9 +586,26 @@ def build_landing_html(output_data):
 """
 
 
-def save_landing_page(output_data):
-    """Сохраняет HTML-лендинг на диск."""
-    html_content = build_landing_html(output_data)
+def save_landing_page(output_data, use_claude=True, use_template=False):
+    """Сохраняет HTML-лендинг: через Claude или резервный шаблон."""
+    html_content = None
+    pricing_data = output_data.get("pricing")
+
+    if use_claude and not use_template:
+        if not pricing_data:
+            pricing_data = generate_pricing_with_claude(output_data.get("bots", []))
+            if pricing_data:
+                output_data["pricing"] = pricing_data
+                with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
+                    json.dump(output_data, file, ensure_ascii=False, indent=2)
+
+        if pricing_data:
+            html_content = generate_landing_html_with_claude(output_data, pricing_data)
+
+    if not html_content:
+        print("  ⚠️  Använder enkel reservmall för HTML.")
+        html_content = build_fallback_landing_html(output_data)
+
     with open(OUTPUT_HTML, "w", encoding="utf-8") as file:
         file.write(html_content)
 
@@ -481,12 +639,17 @@ def parse_args():
     parser.add_argument(
         "--html-only",
         action="store_true",
-        help="Skapa bara HTML från befintlig bot_descriptions.json (ingen API-anrop).",
+        help="Skapa HTML från befintlig bot_descriptions.json via Claude.",
     )
     parser.add_argument(
         "--no-html",
         action="store_true",
         help="Skippa HTML-generering, spara bara JSON.",
+    )
+    parser.add_argument(
+        "--template-html",
+        action="store_true",
+        help="Använd enkel mall istället för Claude för HTML.",
     )
     return parser.parse_args()
 
@@ -541,11 +704,19 @@ def main():
     print("=" * 50)
 
     if args.html_only:
+        if not check_prerequisites():
+            sys.exit(1)
         output = load_json_output()
         if not output:
             sys.exit(1)
-        save_landing_page(output)
+        save_landing_page(
+            output,
+            use_claude=not args.template_html,
+            use_template=args.template_html,
+        )
         print(f"✅ HTML sparad i {OUTPUT_HTML}")
+        if output.get("pricing"):
+            print("  → Paket och priser sparade i bot_descriptions.json under 'pricing'")
         print("  → Öppna filen i webbläsaren för att förhandsgranska")
         return
 
@@ -597,13 +768,19 @@ def main():
     print(f"\n✅ Klart! {len(results)} beskrivningar sparade i {OUTPUT_FILE}")
 
     if not args.no_html:
-        save_landing_page(output)
-        print(f"✅ HTML-landningssida sparad i {OUTPUT_HTML}")
+        save_landing_page(
+            output,
+            use_claude=True,
+            use_template=args.template_html,
+        )
+        print(f"✅ Säljlandningssida sparad i {OUTPUT_HTML}")
+        if output.get("pricing"):
+            print("  → Paket och priser finns i bot_descriptions.json")
 
     print("\nNästa steg:")
     print("  → Öppna bot_descriptions.json och granska")
     print(f"  → Öppna {OUTPUT_HTML} i webbläsaren")
-    print("  → Byt ut «Köp / fråga» mot Stripe-länkar när du är redo")
+    print("  → Byt #kontakt-knappar mot Stripe-betalningslänkar när du är redo")
 
 
 if __name__ == "__main__":

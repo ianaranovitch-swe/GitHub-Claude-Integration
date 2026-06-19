@@ -96,12 +96,18 @@ python generate_bot_descriptions.py --all
 - **`bot_descriptions.json`** — данные для API или доработки
 - **`index.html`** — готовая лендинг-страница (открой в браузере двойным кликом)
 
-### Пересобрать только HTML (без API)
+### Пересобрать только HTML (Claude + существующий JSON)
 
-Если JSON уже есть, а нужно обновить только страницу:
+Если JSON уже есть, Claude создаст пакеты, цены (99–299 kr) и HTML:
 
 ```powershell
 python generate_bot_descriptions.py --html-only
+```
+
+### Простая шаблон-страница (без Claude для HTML)
+
+```powershell
+python generate_bot_descriptions.py --html-only --template-html
 ```
 
 ### Только JSON, без HTML
@@ -109,6 +115,14 @@ python generate_bot_descriptions.py --html-only
 ```powershell
 python generate_bot_descriptions.py --bots-only --no-html
 ```
+
+### Как работает Claude
+
+1. **Описания ботов** — Claude анализирует код каждого repo
+2. **Пакеты и цены** — Claude сам решает: какие боты в каком пакете, цены 99–299 kr
+3. **HTML-лендинг** — Claude создаёт профессиональную продающую страницу на шведском
+
+Всё использует один ключ `ANTHROPIC_API_KEY` из `.env`.
 
 ---
 
