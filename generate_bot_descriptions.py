@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Генератор описаний Telegram-ботов.
+Генератор описаний и лендинга для Telegram-сервисов.
 Берёт репозитории с GitHub, анализирует код через Claude AI
-и создаёт продающие описания на шведском языке.
+и создаёт продающие описания доступа к ботам (не продажу самих ботов).
 """
 
 import argparse
@@ -27,11 +27,31 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 REPO_FILTER = os.environ.get("REPO_FILTER", "bots").lower()
 OUTPUT_FILE = "bot_descriptions.json"
 OUTPUT_HTML = os.environ.get("OUTPUT_HTML", "index.html")
-SITE_TITLE = os.environ.get("SITE_TITLE", "Telegram-botar till salu")
+SITE_TITLE = os.environ.get("SITE_TITLE", "Telegram-tjänster — använd mina botar")
 CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", "")
-MIN_PRICE_SEK = int(os.environ.get("MIN_PRICE_SEK", "99"))
-MAX_PRICE_SEK = int(os.environ.get("MAX_PRICE_SEK", "299"))
+MIN_PRICE_SEK = int(os.environ.get("MIN_PRICE_SEK", "29"))
+MAX_PRICE_SEK = int(os.environ.get("MAX_PRICE_SEK", "499"))
 CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
+
+# Контекст бизнес-модели — передаётся во все промпты Claude
+BUSINESS_MODEL_CONTEXT = """
+AFFÄRESMODELL (VIKTIGT — följ detta strikt):
+- Du säljer INTE botarna, koden eller GitHub-repona
+- Kunder betalar för att ANVÄNDA tjänsterna via Telegram (pay-per-use / kreditpaket)
+- Ägaren tjänar pengar på att erbjuda tillgång till sina botar som tjänster
+- Prissättning baseras på antal förfrågningar, generationer eller liknande enheter
+
+EXEMPEL PÅ TJÄNSTER (anpassa efter faktisk kod i repot):
+1. Mat Egenskaper-bot: användaren skriver en matprodukt → får näringsinformation.
+   Prispaket: t.ex. 10, 30 eller 50 förfrågningar.
+2. Landingsside-bot: genererar professionella landningssidor med Claude, tar emot
+   beställningar på domännamn och vidare sajtintegrering på ny domän.
+3. Produktbild-bot: genererar 4 produktbilder baserat på användarens produktbild
+   (använder Nano Banana / bildgenerering).
+4. Andra botar: analysera koden och föreslå rimlig användningsenhet och paket.
+
+SPRÅK: Svenska i all kundtext.
+"""
 # ──────────────────────────────────────────────────────────────────────────────
 
 
@@ -178,27 +198,33 @@ def collect_repo_context(repo):
 
 
 def generate_description_with_claude(repo_context, repo_name):
-    """Отправляет контекст в Claude и получает JSON-описание бота."""
-    prompt = f"""Du är en copywriter som specialiserar dig på att sälja mjukvarulösningar och Telegram-botar.
+    """Отправляет контекст в Claude и получает JSON-описание сервиса."""
+    prompt = f"""Du är en copywriter som marknadsför Telegram-baserade TJÄNSTER (SaaS / pay-per-use).
 
-Analysera koden och metadata nedan från ett GitHub-repo och skriv en säljande produktbeskrivning på SVENSKA för denna Telegram-bot eller mjukvarulösning.
+{BUSINESS_MODEL_CONTEXT}
+
+Analysera koden och metadata nedan från ett GitHub-repo och beskriv TJÄNSTEN som kunden kan använda — INTE att de köper boten.
 
 VIKTIGT:
 - Skriv på svenska
-- Var specifik om vad boten faktiskt gör (baserat på koden)
-- Lyft fram nyttan för köparen
-- Skriv i ett professionellt men tillgängligt sätt
-- Inkludera: Rubrik, kort pitch (1-2 meningar), funktioner (3-5 punkter), vem det passar för
+- Beskriv vad användaren får GÖRA via boten (t.ex. slå upp näringsvärden, generera landningssida)
+- Lyft fram nyttan per användning/förfrågan
+- Ange rimlig användningsenhet (förfrågningar, generationer, bilder, landningssidor, domänordrar)
+- Nämn INTE att kunden köper källkod eller äger boten
 
-Svara med ett JSON-objekt i exakt detta format (utan markdown-kodblock):
+Svara med JSON (utan markdown):
 {{
-  "name": "Botens namn",
-  "tagline": "En kort säljande mening",
-  "description": "2-3 meningar om vad boten gör och varför det är värdefullt",
+  "name": "Tjänstens namn",
+  "tagline": "En kort säljande mening om vad användaren kan göra",
+  "description": "2-3 meningar om tjänsten och varför den är värdefull att använda",
   "features": ["Funktion 1", "Funktion 2", "Funktion 3"],
-  "ideal_for": "Vem passar denna bot för?",
-  "tech_stack": ["Python", "etc"],
-  "category": "En kategori t.ex. E-handel, AI, Produktivitet, etc"
+  "ideal_for": "Vem passar tjänsten för?",
+  "tech_stack": ["Python", "Claude", "Nano Banana", "etc"],
+  "category": "Kategori t.ex. Mat & hälsa, Webb & domän, E-handel, AI",
+  "usage_unit": "förfrågningar",
+  "usage_unit_singular": "förfrågan",
+  "example_usage": "Konkret exempel: Användaren skriver 'havregryn' och får näringsvärden",
+  "access_via": "Telegram"
 }}
 
 REPO-INFORMATION:
@@ -218,61 +244,80 @@ REPO-INFORMATION:
 
 
 def generate_pricing_with_claude(bots):
-    """Claude создаёт пакеты, цены и распределение ботов."""
+    """Claude создаёт пакеты доступа (кредиты/запросы) и цены."""
     if not bots:
         return None
 
     bots_json = json.dumps(bots, ensure_ascii=False, indent=2)
     contact_hint = CONTACT_EMAIL or "kontakt@example.com"
 
-    prompt = f"""Du är en prissättnings- och produktstrateg som säljer Telegram-botar i Sverige.
+    prompt = f"""Du är en prissättningsstrateg för Telegram-baserade tjänster i Sverige.
 
-Baserat på botlistan nedan ska du skapa en komplett prissättningsstrategi på SVENSKA.
+{BUSINESS_MODEL_CONTEXT}
+
+Baserat på tjänstelistorna nedan ska du skapa en komplett prissättning för ANVÄNDNING — inte försäljning av botar.
 
 REGLER:
 - Valuta: SEK (kr)
-- Varje enskild bot: pris mellan {MIN_PRICE_SEK} och {MAX_PRICE_SEK} kr
-- Skapa 2–4 paket (t.ex. Starter, Pro, Business, Komplett) med logisk gruppering
-- Paketpris ska vara attraktivt (rabatt jämfört med att köpa botarna var för sig)
-- Paketpris får också ligga mellan {MIN_PRICE_SEK} och {MAX_PRICE_SEK} kr per bot i snitt, men totalpaketpris kan vara högre om flera botar ingår
-- Välj själv vilka botar som passar i vilket paket baserat på kategori, målgrupp och nytta
-- Markera ett paket som "recommended": true om det passar bäst för de flesta
-- Sätt suggested_price per bot baserat på komplexitet och värde
+- Varje tjänst ska ha 2–4 kreditpaket (t.ex. 10/30/50 förfrågningar, eller 1/3/5 generationer)
+- Pris per paket: rimligt mellan {MIN_PRICE_SEK} och {MAX_PRICE_SEK} kr totalt
+- Dyrare/more komplexa tjänster (landningssidor + domän) kan ha högre pris
+- Enklare tjänster (matuppslag) kan ha lägre pris
+- Claude bestämmer själv paketstorlekar och priser baserat på tjänstens värde
+- Skapa 1–2 kombopaket som blandar flera tjänster (valfritt)
+- Markera recommended: true på bästa paketet per tjänst
+- Sälj ALDRIG boten/koden — bara tillgång till användning
 
-Svara ENDAST med JSON (ingen markdown):
+Svara ENDAST med JSON:
 {{
+  "business_model": "usage_access",
   "currency": "SEK",
-  "pricing_strategy_summary": "Kort förklaring av din strategi på svenska",
-  "individual_bots": [
+  "pricing_strategy_summary": "Kort förklaring på svenska",
+  "services": [
     {{
-      "repo_name": "exakt repo_name från listan",
-      "display_name": "Säljande namn",
-      "price_sek": 149,
-      "price_rationale": "Varför detta pris"
+      "repo_name": "exakt repo_name",
+      "display_name": "Tjänstens namn",
+      "usage_unit": "förfrågningar",
+      "usage_unit_singular": "förfrågan",
+      "example": "Användaren skriver en matprodukt och får näringsvärden",
+      "credit_packages": [
+        {{
+          "id": "mat-10",
+          "credits": 10,
+          "label": "10 förfrågningar",
+          "price_sek": 49,
+          "price_per_credit_sek": 4.9,
+          "recommended": false
+        }}
+      ]
     }}
   ],
-  "packages": [
+  "combo_packages": [
     {{
-      "id": "starter",
-      "name": "Paketnamn på svenska",
-      "tagline": "Kort säljande mening",
-      "description": "2-3 meningar om paketet",
-      "price_sek": 249,
-      "original_price_sek": 349,
-      "bots_included": ["repo_name1", "repo_name2"],
-      "features": ["Vad kunden får 1", "Vad kunden får 2"],
-      "ideal_for": "Målgrupp",
-      "recommended": false
+      "id": "prova",
+      "name": "Prova-paket",
+      "tagline": "Testa flera tjänster",
+      "description": "Beskrivning",
+      "price_sek": 99,
+      "includes": [
+        {{"repo_name": "repo1", "credits": 10, "usage_unit": "förfrågningar"}}
+      ],
+      "recommended": true
     }}
   ],
-  "contact_email": "{contact_hint}"
+  "contact_email": "{contact_hint}",
+  "how_it_works": [
+    "Steg 1: Välj paket och betala",
+    "Steg 2: Öppna boten i Telegram",
+    "Steg 3: Använd dina krediter"
+  ]
 }}
 
-BOTLISTA:
+TJÄNSTELISTA:
 {bots_json}
 """
 
-    print("  💰 Claude planerar paket och priser...")
+    print("  💰 Claude planerar kreditpaket och priser...")
     raw = call_claude(prompt, max_tokens=4000)
     if not raw:
         return None
@@ -286,41 +331,43 @@ BOTLISTA:
 
 
 def generate_landing_html_with_claude(output_data, pricing_data):
-    """Claude создаёт полную продающую HTML-страницу."""
+    """Claude создаёт продающую HTML-страницу для доступа к сервисам."""
     bots_json = json.dumps(output_data.get("bots", []), ensure_ascii=False, indent=2)
     pricing_json = json.dumps(pricing_data, ensure_ascii=False, indent=2)
     site_title = SITE_TITLE
     username = output_data.get("username", GITHUB_USERNAME)
     generated_at = output_data.get("generated_at", "")
 
-    prompt = f"""Du är en senior webbdesigner och copywriter som bygger högkvalitativa säljlandningssidor.
+    prompt = f"""Du är en senior webbdesigner och copywriter som bygger SaaS-landningssidor.
 
-Skapa en komplett, professionell HTML-landningssida på SVENSKA för att sälja Telegram-botar.
+{BUSINESS_MODEL_CONTEXT}
+
+Skapa en komplett, professionell HTML-landningssida på SVENSKA för att sälja TILLGÅNG till Telegram-tjänster.
 
 DATA:
 - Sajttitel: {site_title}
-- Säljare/GitHub: @{username}
+- Ägare: @{username}
 - Genererad: {generated_at}
-- Botbeskrivningar (JSON): {bots_json}
-- Prissättning och paket (JSON): {pricing_json}
+- Tjänstebeskrivningar (JSON): {bots_json}
+- Kreditpaket och priser (JSON): {pricing_json}
 
 KRAV:
-1. Returnera EN komplett HTML-fil med inbäddad CSS (ingen extern CSS/JS, inga CDN-länkar)
-2. Modern, professionell, säljande design — mörkt tema, tydliga CTA-knappar
-3. Sektioner: Hero, Fördelar, Paket/priser (med recommended-badge), Enskilda botar, FAQ (4-6 frågor), Kontakt/footer
-4. Visa priser tydligt i SEK (kr) enligt pricing JSON
-5. Paketkort ska lista vilka botar som ingår
-6. Varje köpknapp: href="#kontakt" med text som "Köp nu" eller "Välj paket"
-7. Responsiv design (mobil + desktop)
-8. Svenska språket genomgående
-9. Använd riktiga botnamn, beskrivningar och funktioner från JSON — hitta inte på botar som inte finns
-10. Lägg till meta viewport och meta description
-11. Svara ENDAST med rå HTML — ingen markdown, ingen förklaring före eller efter
+1. EN komplett HTML-fil med inbäddad CSS (ingen extern CSS/JS, inga CDN)
+2. Modern, professionell SaaS-design — mörkt tema, tydliga CTA
+3. Sektioner: Hero, Så fungerar det (3 steg), Våra tjänster, Prispaket per tjänst, Kombopaket, FAQ (5 frågor), Kontakt/footer
+4. Hero ska förklara: "Använd mina Telegram-botar — betala per förfrågan/generation"
+5. Visa priser i SEK för kreditpaket (10/30/50 förfrågningar etc.) — INTE "köp boten"
+6. Knappar: "Köp krediter", "Välj paket", "Kom igång" — href="#kontakt"
+7. Förklara tydligt att kunden får ANVÄNDA tjänsten, inte äga koden
+8. Nämn Telegram som plattform för att använda tjänsterna
+9. Responsiv design, svenska språket
+10. Använd riktiga tjänstenamn från JSON — hitta inte på tjänster
+11. Svara ENDAST med rå HTML
 
-Kontakt-e-post: {CONTACT_EMAIL or pricing_data.get("contact_email", "kontakt@example.com")}
+Kontakt: {CONTACT_EMAIL or pricing_data.get("contact_email", "kontakt@example.com")}
 """
 
-    print("  🎨 Claude skapar säljlandningssida (HTML)...")
+    print("  🎨 Claude skapar tjänstelandningssida (HTML)...")
     raw = call_claude(prompt, max_tokens=16000)
     if not raw:
         return None
@@ -350,8 +397,8 @@ def build_bot_card(bot):
     description = escape_text(bot.get("description", ""))
     category = escape_text(bot.get("category", "Telegram-bot"))
     ideal_for = escape_text(bot.get("ideal_for", ""))
-    repo_url = escape_text(bot.get("repo_url", "#"))
-    language = escape_text(bot.get("language", ""))
+    usage_unit = escape_text(bot.get("usage_unit", "förfrågningar"))
+    example_usage = escape_text(bot.get("example_usage", ""))
 
     features = bot.get("features") or []
     feature_items = "".join(
@@ -373,12 +420,12 @@ def build_bot_card(bot):
       <p class="description">{description}</p>
       <ul class="features">{feature_items}</ul>
       <p class="ideal-for"><strong>Passar för:</strong> {ideal_for}</p>
+      {f'<p class="meta">Enhet: {usage_unit}</p>' if usage_unit else ""}
+      {f'<p class="meta">Exempel: {example_usage}</p>' if example_usage else ""}
       <div class="tech-stack">{tech_tags}</div>
       <div class="bot-card-actions">
-        <a class="btn btn-secondary" href="{repo_url}" target="_blank" rel="noopener">Visa på GitHub</a>
-        <a class="btn btn-primary" href="#kontakt">Köp / fråga</a>
+        <a class="btn btn-primary" href="#kontakt">Köp krediter</a>
       </div>
-      {f'<p class="meta">Språk: {language}</p>' if language else ""}
     </article>
     """
 
@@ -404,7 +451,7 @@ def build_fallback_landing_html(output_data):
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{site_title}</title>
-  <meta name="description" content="Färdiga Telegram-botar byggda av {username}. Köp, anpassa och deploya direkt.">
+  <meta name="description" content="Använd Telegram-tjänster — betala per förfrågan eller generation. Mat, landningssidor, produktbilder och mer.">
   <style>
     :root {{
       --bg: #0f1419;
@@ -555,9 +602,9 @@ def build_fallback_landing_html(output_data):
   <header>
     <div class="container">
       <h1>{site_title}</h1>
-      <p>Färdiga Telegram-botar från GitHub — analyserade, beskrivna och redo att köpas eller anpassas efter dina behov.</p>
+      <p>Använd mina Telegram-tjänster — betala bara för det du behöver. Matuppslag, landningssidor, produktbilder och mer.</p>
       <div class="stats">
-        <span class="stat"><strong>{total}</strong> produkter</span>
+        <span class="stat"><strong>{total}</strong> tjänster</span>
         <span class="stat">av <strong>@{username}</strong></span>
         <span class="stat">Uppdaterad <strong>{generated_at}</strong></span>
       </div>
@@ -572,9 +619,9 @@ def build_fallback_landing_html(output_data):
 
   <section id="kontakt">
     <div class="container">
-      <h2>Intresserad?</h2>
+      <h2>Kom igång</h2>
       <p>{contact_block}</p>
-      <p style="margin-top: 1rem;">Stripe-betalning kan kopplas in senare — byt ut knappen «Köp / fråga» mot din betalningslänk.</p>
+      <p style="margin-top: 1rem;">Välj ett kreditpaket ovan och betala via Stripe — sedan använder du tjänsten direkt i Telegram.</p>
     </div>
   </section>
 
@@ -586,21 +633,61 @@ def build_fallback_landing_html(output_data):
 """
 
 
-def save_landing_page(output_data, use_claude=True, use_template=False):
+def is_current_pricing_format(pricing_data):
+    """Проверяет, что pricing в новом формате (services + credit_packages)."""
+    if not pricing_data or not isinstance(pricing_data, dict):
+        return False
+
+    # Старый формат: продажа ботов, не кредиты
+    if "individual_bots" in pricing_data or "packages" in pricing_data:
+        return False
+
+    services = pricing_data.get("services")
+    if not isinstance(services, list) or not services:
+        return False
+
+    for service in services:
+        if not isinstance(service, dict):
+            return False
+        credit_packages = service.get("credit_packages")
+        if not isinstance(credit_packages, list) or not credit_packages:
+            return False
+
+    return True
+
+
+def update_pricing_if_needed(output_data, fresh_pricing=False, require_for_claude=False):
+    """Генерирует pricing при --fresh-pricing, отсутствии или устаревшем формате."""
+    existing_pricing = output_data.get("pricing")
+    has_valid_pricing = is_current_pricing_format(existing_pricing)
+    should_generate = fresh_pricing or (require_for_claude and not has_valid_pricing)
+
+    if not should_generate:
+        return existing_pricing
+
+    if existing_pricing and not has_valid_pricing:
+        print("  ⚠️  Gammalt prissättningsformat — genererar om kreditpaket...")
+
+    pricing_data = generate_pricing_with_claude(output_data.get("bots", []))
+    if pricing_data:
+        output_data["pricing"] = pricing_data
+        with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
+            json.dump(output_data, file, ensure_ascii=False, indent=2)
+    return pricing_data
+
+
+def save_landing_page(output_data, use_claude=True, use_template=False, fresh_pricing=False):
     """Сохраняет HTML-лендинг: через Claude или резервный шаблон."""
     html_content = None
-    pricing_data = output_data.get("pricing")
+    require_for_claude = use_claude and not use_template
+    pricing_data = update_pricing_if_needed(
+        output_data,
+        fresh_pricing=fresh_pricing,
+        require_for_claude=require_for_claude,
+    )
 
-    if use_claude and not use_template:
-        if not pricing_data:
-            pricing_data = generate_pricing_with_claude(output_data.get("bots", []))
-            if pricing_data:
-                output_data["pricing"] = pricing_data
-                with open(OUTPUT_FILE, "w", encoding="utf-8") as file:
-                    json.dump(output_data, file, ensure_ascii=False, indent=2)
-
-        if pricing_data:
-            html_content = generate_landing_html_with_claude(output_data, pricing_data)
+    if require_for_claude and pricing_data:
+        html_content = generate_landing_html_with_claude(output_data, pricing_data)
 
     if not html_content:
         print("  ⚠️  Använder enkel reservmall för HTML.")
@@ -623,7 +710,7 @@ def load_json_output():
 def parse_args():
     """Разбирает аргументы командной строки."""
     parser = argparse.ArgumentParser(
-        description="Generera säljande beskrivningar för GitHub Telegram-botar."
+        description="Generera tjänstebeskrivningar och landningssida för Telegram-botar (användning, inte försäljning)."
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -644,12 +731,17 @@ def parse_args():
     parser.add_argument(
         "--no-html",
         action="store_true",
-        help="Skippa HTML-generering, spara bara JSON.",
+        help="Skippa HTML-generering (pricing kan fortfarande uppdateras med --fresh-pricing).",
     )
     parser.add_argument(
         "--template-html",
         action="store_true",
         help="Använd enkel mall istället för Claude för HTML.",
+    )
+    parser.add_argument(
+        "--fresh-pricing",
+        action="store_true",
+        help="Generera om kreditpaket och priser (fungerar även med --no-html).",
     )
     return parser.parse_args()
 
@@ -709,14 +801,31 @@ def main():
         output = load_json_output()
         if not output:
             sys.exit(1)
+
+        if args.no_html:
+            if not args.fresh_pricing:
+                print("ℹ️  --no-html: hoppar över HTML. Lägg till --fresh-pricing för att uppdatera priser.")
+                return
+            update_pricing_if_needed(
+                output,
+                fresh_pricing=True,
+                require_for_claude=False,
+            )
+            if output.get("pricing"):
+                print("✅ Kreditpaket och priser uppdaterade i bot_descriptions.json")
+            else:
+                print("⚠️  Ingen pricing genererades — kontrollera att bots finns i JSON.")
+            return
+
         save_landing_page(
             output,
             use_claude=not args.template_html,
             use_template=args.template_html,
+            fresh_pricing=args.fresh_pricing,
         )
         print(f"✅ HTML sparad i {OUTPUT_HTML}")
         if output.get("pricing"):
-            print("  → Paket och priser sparade i bot_descriptions.json under 'pricing'")
+            print("  → Kreditpaket och priser sparade i bot_descriptions.json under 'pricing'")
         print("  → Öppna filen i webbläsaren för att förhandsgranska")
         return
 
@@ -767,20 +876,30 @@ def main():
 
     print(f"\n✅ Klart! {len(results)} beskrivningar sparade i {OUTPUT_FILE}")
 
-    if not args.no_html:
+    if args.fresh_pricing and args.no_html:
+        update_pricing_if_needed(
+            output,
+            fresh_pricing=True,
+            require_for_claude=False,
+        )
+        if output.get("pricing"):
+            print("✅ Kreditpaket och priser uppdaterade i bot_descriptions.json")
+    elif not args.no_html:
         save_landing_page(
             output,
             use_claude=True,
             use_template=args.template_html,
+            fresh_pricing=args.fresh_pricing,
         )
-        print(f"✅ Säljlandningssida sparad i {OUTPUT_HTML}")
+        print(f"✅ Tjänstelandningssida sparad i {OUTPUT_HTML}")
         if output.get("pricing"):
-            print("  → Paket och priser finns i bot_descriptions.json")
+            print("  → Kreditpaket och priser finns i bot_descriptions.json")
 
     print("\nNästa steg:")
     print("  → Öppna bot_descriptions.json och granska")
-    print(f"  → Öppna {OUTPUT_HTML} i webbläsaren")
-    print("  → Byt #kontakt-knappar mot Stripe-betalningslänkar när du är redo")
+    if not args.no_html:
+        print(f"  → Öppna {OUTPUT_HTML} i webbläsaren")
+    print("  → Koppla Stripe för kreditköp och Telegram för leverans av tjänsten")
 
 
 if __name__ == "__main__":

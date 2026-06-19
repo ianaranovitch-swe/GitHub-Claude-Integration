@@ -1,7 +1,15 @@
-# GitHub + Claude: Bot Description Generator
+# GitHub + Claude: Telegram-tjänster (användning, inte försäljning)
 
-Автоматически создаёт продающие описания ваших Telegram-ботов на шведском языке.
-Скрипт читает код с GitHub, отправляет его в Claude AI и сохраняет результат в `bot_descriptions.json`.
+Скрипт создаёт **лендинг для доступа к твоим Telegram-ботам** — не для продажи самих ботов.
+
+**Бизнес-модель:** клиент платит за **использование** (запросы, генерации, кредиты), а не покупает код.
+
+Примеры сервисов:
+- **Mat Egenskaper** — питательная информация о продуктах (пакеты 10/30/50 запросов)
+- **Landingsside-bot** — генерация лендингов, заказ домена, интеграция сайта (Claude)
+- **Produktbild-bot** — 4 картинки из одной фото продукта (Nano Banana)
+
+Claude сам решает цены и пакеты кредитов на шведском языке.
 
 ---
 
@@ -116,13 +124,34 @@ python generate_bot_descriptions.py --html-only --template-html
 python generate_bot_descriptions.py --bots-only --no-html
 ```
 
+### Обновить только цены (без HTML)
+
+```powershell
+python generate_bot_descriptions.py --html-only --fresh-pricing --no-html
+```
+
+Или после полного анализа GitHub:
+
+```powershell
+python generate_bot_descriptions.py --bots-only --no-html --fresh-pricing
+```
+
 ### Как работает Claude
 
-1. **Описания ботов** — Claude анализирует код каждого repo
-2. **Пакеты и цены** — Claude сам решает: какие боты в каком пакете, цены 99–299 kr
-3. **HTML-лендинг** — Claude создаёт профессиональную продающую страницу на шведском
+1. **Описания сервисов** — что пользователь может делать через бота
+2. **Кредитные пакеты** — Claude сам решает: 10/30/50 запросов, цены в kr
+3. **HTML-лендинг** — продающая страница «используй мои боты», не «купи бота»
 
-Всё использует один ключ `ANTHROPIC_API_KEY` из `.env`.
+Всё через один ключ `ANTHROPIC_API_KEY` из `.env`.
+
+### Обновить цены и HTML (без повторного анализа GitHub)
+
+```powershell
+python generate_bot_descriptions.py --html-only --fresh-pricing
+```
+
+> Om `bot_descriptions.json` har gammalt prissättningsformat (`individual_bots` / `packages`)
+> uppdateras priserna automatiskt vid `--html-only` utan extra flagga.
 
 ---
 
