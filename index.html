@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram-botar till salu</title>
+  <meta name="description" content="Färdiga Telegram-botar byggda av test. Köp, anpassa och deploya direkt.">
+  <style>
+    :root {
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --surface-hover: #243044;
+      --text: #e7ecf3;
+      --muted: #9aa8bc;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --border: #2d3a4f;
+      --success: #22c55e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 1.25rem; }
+    header {
+      padding: 4rem 0 3rem;
+      text-align: center;
+      background: linear-gradient(180deg, #162032 0%, var(--bg) 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      margin-bottom: 0.75rem;
+    }
+    header p { color: var(--muted); max-width: 620px; margin: 0 auto 1.5rem; }
+    .stats {
+      display: inline-flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.4rem 1rem;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .stat strong { color: var(--text); }
+    main { padding: 3rem 0 4rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .bot-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .bot-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .category {
+      display: inline-block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--success);
+      margin-bottom: 0.25rem;
+    }
+    .bot-card h2 { font-size: 1.35rem; }
+    .tagline { color: var(--muted); font-size: 0.95rem; }
+    .description { font-size: 0.95rem; }
+    .features {
+      list-style: none;
+      display: grid;
+      gap: 0.35rem;
+    }
+    .features li::before {
+      content: "✓ ";
+      color: var(--success);
+      font-weight: bold;
+    }
+    .ideal-for { font-size: 0.9rem; color: var(--muted); }
+    .tech-stack { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .tag {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.2rem 0.65rem;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .bot-card-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: auto;
+      padding-top: 0.5rem;
+    }
+    .btn {
+      display: inline-block;
+      text-decoration: none;
+      border-radius: 10px;
+      padding: 0.6rem 1rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--surface-hover); }
+    .meta { font-size: 0.8rem; color: var(--muted); }
+    #kontakt {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 3rem 0;
+      text-align: center;
+    }
+    #kontakt h2 { margin-bottom: 0.75rem; }
+    #kontakt p { color: var(--muted); }
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--border);
+    }
+    @media (max-width: 640px) {
+      .bot-card-actions { flex-direction: column; }
+      .btn { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Telegram-botar till salu</h1>
+      <p>Färdiga Telegram-botar från GitHub — analyserade, beskrivna och redo att köpas eller anpassas efter dina behov.</p>
+      <div class="stats">
+        <span class="stat"><strong>1</strong> produkter</span>
+        <span class="stat">av <strong>@test</strong></span>
+        <span class="stat">Uppdaterad <strong>2026-06-19</strong></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="grid">
+      
+    <article class="bot-card">
+      <div class="bot-card-header">
+        <span class="category">AI</span>
+        <h2>Test Bot</h2>
+        <p class="tagline">En smart bot</p>
+      </div>
+      <p class="description">Gör coola saker.</p>
+      <ul class="features"><li>A</li><li>B</li></ul>
+      <p class="ideal-for"><strong>Passar för:</strong> Företag</p>
+      <div class="tech-stack"><span class="tag">Python</span></div>
+      <div class="bot-card-actions">
+        <a class="btn btn-secondary" href="https://github.com" target="_blank" rel="noopener">Visa på GitHub</a>
+        <a class="btn btn-primary" href="#kontakt">Köp / fråga</a>
+      </div>
+      
+    </article>
+    
+    </div>
+  </main>
+
+  <section id="kontakt">
+    <div class="container">
+      <h2>Intresserad?</h2>
+      <p>Kontakta oss för pris och demo.</p>
+      <p style="margin-top: 1rem;">Stripe-betalning kan kopplas in senare — byt ut knappen «Köp / fråga» mot din betalningslänk.</p>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">Genererad automatiskt av Bot Description Generator</div>
+  </footer>
+</body>
+</html>

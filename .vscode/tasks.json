@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Установить зависимости",
+      "type": "shell",
+      "command": "python -m pip install -r requirements.txt",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Запустить Bot Generator",
+      "type": "shell",
+      "command": "python generate_bot_descriptions.py --bots-only",
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "envFile": "${workspaceFolder}/.env"
+      },
+      "dependsOn": ["Установить зависимости"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

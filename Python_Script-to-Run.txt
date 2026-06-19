@@ -1,0 +1,3 @@
+export GITHUB_TOKEN="ghp_xxxx"
+export ANTHROPIC_API_KEY="sk-ant-xxxx"
+python generate_bot_descriptions.py

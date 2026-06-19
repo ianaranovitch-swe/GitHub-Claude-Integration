@@ -1,0 +1,25 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Bot Generator (только боты)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/generate_bot_descriptions.py",
+      "console": "integratedTerminal",
+      "args": ["--bots-only"],
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Bot Generator (все repos)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/generate_bot_descriptions.py",
+      "console": "integratedTerminal",
+      "args": ["--all"],
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

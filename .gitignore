@@ -1,0 +1,18 @@
+# Секреты и локальная конфигурация
+.env
+GitHub-TOKEN.txt
+
+# Результат работы скрипта
+bot_descriptions.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/settings.json
+.idea/
